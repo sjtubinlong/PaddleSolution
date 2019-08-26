@@ -127,8 +127,8 @@ D:\PaddleDeploy\inference\build\Release> demo.ext --conf=D:\\PaddleDeploy\\infer
 
 文件`14.jpg`预测的结果存储在`14_jpg.png`中，可视化结果在`14_jpg_scoremap.png`中， 原始尺寸的预测结果在`14_jpg_recover.png`中。
 
-输入原图  
-![avatar](inference/images/humanseg/demo.jpg)
+分割输入原图  
+![avatar](images/humanseg/demo.jpg)
 
-输出预测结果   
-![avatar](inference/images/humanseg/demo_jpg_recover.png)
+分割输出预测结果   
+![avatar](images/humanseg/demo_jpg_recover.png)
