@@ -132,3 +132,8 @@ D:\PaddleDeploy\inference\build\Release> demo.ext --conf=D:\\PaddleDeploy\\infer
 
 分割输出预测结果   
 ![avatar](images/humanseg/demo_jpg_recover.png)
+
+### 其它模型预测
+我们还提供了一个图像分类的模型，[下载地址](https://paddleseg.bj.bcebos.com/models/ResNet50_vd.tar)
+执行步骤请参考**step5**，分类预测的数组直接输出在终端，如下：
+![avatar](https://paddleseg.bj.bcebos.com/serving/images/classify_demo_out.png)
