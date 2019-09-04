@@ -28,7 +28,8 @@ namespace PaddleSolution {
         int edge = _config->_resize[1];
         int yy = static_cast<int>((im.rows - edge) / 2);
         int xx = static_cast<int>((im.cols - edge) / 2);
-        im = cv::Mat(im, cv::Rect(xx, yy, edge, edge));
+	im = cv::Mat(im, cv::Rect(xx, yy, edge, edge));
+        cvtColor(im, im, CV_BGR2RGB);
         // 4. (img - mean) / std
         int hh = im.rows;
         int ww = im.cols;
