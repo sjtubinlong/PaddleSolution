@@ -1,0 +1,16 @@
+DEPLOY:
+    USE_GPU: 1
+    MODEL_PATH: "/root/projects/models/yolo_iphone_model"
+    MODEL_FILENAME: "__model__"
+    PARAMS_FILENAME: "__params__"
+    EVAL_CROP_SIZE: (608, 608)
+    CROP_SHORT_SIZE : 256
+    MEAN:  [0.4647, 0.4647, 0.4647]
+    STD: [0.0834, 0.0834, 0.0834]
+    IMAGE_TYPE: "rgb"
+    NUM_CLASSES: 1
+    CHANNELS : 3
+    PRE_PROCESSOR: "DetectionPreProcessor"
+    PREDICTOR_MODE: "ANALYSIS"
+    BATCH_SIZE : 2 
+

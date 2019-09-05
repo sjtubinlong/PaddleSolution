@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(cpp_inference_demo CXX C)
+message("cmake module path: ${CMAKE_MODULE_PATH}")
+message("cmake root path: ${CMAKE_ROOT}")
 
 option(WITH_MKL        "Compile demo with MKL/OpenBlas support,defaultuseMKL."          ON)
 option(WITH_GPU        "Compile demo with GPU/CPU, default use CPU."                    ON)
@@ -36,7 +38,7 @@ if (NOT DEFINED OPENCV_DIR OR ${OPENCV_DIR} STREQUAL "")
 endif()
 
 include_directories("${CMAKE_SOURCE_DIR}/")
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/ext/yaml-cpp/src/yaml-cpp/include")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/ext/yaml-cpp/src/ext-yaml-cpp/include")
 include_directories("${PADDLE_DIR}/")
 include_directories("${PADDLE_DIR}/third_party/install/protobuf/include")
 include_directories("${PADDLE_DIR}/third_party/install/glog/include")
@@ -68,7 +70,7 @@ else ()
   include_directories("${PADDLE_DIR}/paddle/include")
   link_directories("${PADDLE_DIR}/paddle/lib")
   include_directories("${OPENCV_DIR}/include")
-  link_directories("${OPENCV_DIR}/lib64")
+  link_directories("${OPENCV_DIR}/lib")
 endif ()
 
 if (WIN32)
@@ -82,7 +84,7 @@ if (WIN32)
         add_definitions(-DSTATIC_LIB)
     endif()
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o2 -std=c++11")
     set(CMAKE_STATIC_LIBRARY_PREFIX "")
 endif()
 
@@ -160,14 +162,13 @@ if (NOT WIN32)
     set(EXTERNAL_LIB "-lrt -ldl -lpthread")
     set(DEPS ${DEPS}
         ${MATH_LIB} ${MKLDNN_LIB}
-        glog gflags protobuf snappystream snappy z xxhash
+        glog gflags protobuf yaml-cpp snappystream snappy z xxhash
         ${EXTERNAL_LIB})
 else()
     set(DEPS ${DEPS}
         ${MATH_LIB} ${MKLDNN_LIB}
         opencv_world346 glog libyaml-cppmt gflags_static libprotobuf snappy zlibstatic xxhash snappystream ${EXTERNAL_LIB})
     set(DEPS ${DEPS} libcmt shlwapi)
-	set(DEPS ${DEPS}  ${YAML_CPP_LIBRARY})
 endif(NOT WIN32)
 
 if(WITH_GPU)
@@ -186,39 +187,47 @@ if(WITH_GPU)
 endif()
 
 if (NOT WIN32)
-    set(DEPS ${DEPS} ${OPENCV_DIR}/lib64/libopencv_imgcodecs${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/lib64/libopencv_imgproc${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/lib64/libopencv_core${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/lib64/libopencv_highgui${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/libIlmImf${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/liblibjasper${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/liblibpng${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/liblibtiff${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/libittnotify${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/liblibjpeg-turbo${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/liblibwebp${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64/libzlib${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/lib/libopencv_imgcodecs${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/lib/libopencv_imgproc${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/lib/libopencv_core${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/lib/libopencv_highgui${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/libIlmImf${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibjasper${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibpng${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibtiff${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/libittnotify${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibjpeg-turbo${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibwebp${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/libzlib${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
+message(${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
 
+SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp 
+    preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
+    preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp 
+    preprocessor/preprocessor_detection.cpp predictor/detection_predictor.cpp)
 
-SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp)
 ADD_LIBRARY(libpaddleseg_inference STATIC ${PADDLESEG_INFERENCE_SRCS})
 target_link_libraries(libpaddleseg_inference ${DEPS})
 
-add_executable(seg_demo seg_demo.cpp)
+add_executable(demo demo.cpp)
 add_executable(classify_demo classify_demo.cpp)
+add_executable(detection_demo detection_demo.cpp)
 
-
-ADD_DEPENDENCIES(libpaddleseg_inference yaml-cpp)
-ADD_DEPENDENCIES(seg_demo yaml-cpp libpaddleseg_inference)
-ADD_DEPENDENCIES(classify_demo yaml-cpp libpaddleseg_inference)
-
-target_link_libraries(seg_demo ${DEPS} libpaddleseg_inference)
+ADD_DEPENDENCIES(libpaddleseg_inference ext-yaml-cpp)
+ADD_DEPENDENCIES(demo ext-yaml-cpp libpaddleseg_inference)
+target_link_libraries(demo ${DEPS} libpaddleseg_inference)
 target_link_libraries(classify_demo ${DEPS} libpaddleseg_inference)
+target_link_libraries(detection_demo ${DEPS} libpaddleseg_inference)
 
-
-add_custom_command(TARGET seg_demo POST_BUILD
+if (WIN32)
+    add_custom_command(TARGET demo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/mklml.dll ./mklml.dll
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/libiomp5md.dll ./libiomp5md.dll
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mkldnn/lib/mkldnn.dll ./mkldnn.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/mklml.dll ./release/mklml.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/libiomp5md.dll ./release/libiomp5md.dll
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mkldnn/lib/mkldnn.dll ./release/mkldnn.dll
-        )
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mkldnn/lib/mkldnn.dll ./mkldnn.dll
+    )
+endif()
