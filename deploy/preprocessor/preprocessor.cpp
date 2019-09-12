@@ -4,7 +4,7 @@
 #include "preprocessor.h"
 #include "preprocessor_seg.h"
 #include "preprocessor_classify.h"
-
+#include "preprocessor_detection.h"
 
 namespace PaddleSolution {
 
@@ -32,9 +32,17 @@ namespace PaddleSolution {
             return p;
         }
 
+        if (config->_pre_processor == "DetectionPreProcessor") {
+            auto p = std::make_shared<DetectionPreProcessor>();
+            if (!p->init(config)) {
+                return nullptr;
+            }
+            return p;
+        }
+	
+
         LOG(FATAL) << "unknown processor_name [" << config->_pre_processor << "]";
 
         return nullptr;
     }
 }
-

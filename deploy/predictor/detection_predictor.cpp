@@ -69,8 +69,7 @@ namespace PaddleSolution {
 
         auto& input_buffer = _buffer;
         auto& imgs_batch = _imgs_batch;
-
-        input_buffer.resize(batch_buffer_size);
+	float sr;
         for (int u = 0; u < batch; ++u) {
             int batch_size = default_batch_size;
             if (u == (batch - 1) && (total_size % default_batch_size)) {
@@ -79,7 +78,7 @@ namespace PaddleSolution {
 
             int real_buffer_size = batch_size * channels * eval_width * eval_height;
             std::vector<paddle::PaddleTensor> feeds;
-            input_buffer.resize(real_buffer_size);
+            input_buffer.clear();
             imgs_batch.clear();
             for (int i = 0; i < batch_size; ++i) {
                 int idx = u * default_batch_size + i;
@@ -87,31 +86,67 @@ namespace PaddleSolution {
             }
 	    std::vector<int> ori_widths;
 	    std::vector<int> ori_heights;
+	    std::vector<int> resize_widths;
+	    std::vector<int> resize_heights;
+            std::vector<float> scale_ratios;
             ori_widths.resize(batch_size);
             ori_heights.resize(batch_size);
+	    resize_widths.resize(batch_size);
+	    resize_heights.resize(batch_size);
+	    scale_ratios.resize(batch_size);            
 
-            if (!_preprocessor->batch_process(imgs_batch, input_buffer.data(), ori_widths.data(), ori_heights.data())) {
+            if (!_preprocessor->batch_process(imgs_batch, input_buffer, ori_widths.data(), ori_heights.data(),
+					      resize_widths.data(), resize_heights.data(), scale_ratios.data())) {
                 return -1;
             }
-
-            paddle::PaddleTensor im_tensor, im_size_tensor;
+            paddle::PaddleTensor im_tensor, im_size_tensor, im_info_tensor;
 
             im_tensor.name = "image";
-            im_tensor.shape = std::vector<int>({ batch_size, channels, eval_height, eval_width });
-            im_tensor.data.Reset(input_buffer.data(), real_buffer_size * sizeof(float));
+            im_tensor.shape = std::vector<int>({ batch_size, channels, resize_heights[0], resize_widths[0] });
+            im_tensor.data.Reset(input_buffer.data(), input_buffer.size() * sizeof(float));
             im_tensor.dtype = paddle::PaddleDType::FLOAT32;
-	    
+ 
+	    std::vector<float> image_infos;
+            for(int i = 0; i < batch_size; ++i) {
+		image_infos.push_back(resize_heights[i]);
+		image_infos.push_back(resize_widths[i]);
+		image_infos.push_back(scale_ratios[i]);
+	    }
+	    im_info_tensor.name = "info";
+	    im_info_tensor.shape = std::vector<int>({batch_size, 3});
+	    im_info_tensor.data.Reset(image_infos.data(), batch_size * 3 * sizeof(float));
+	    im_info_tensor.dtype = paddle::PaddleDType::FLOAT32;
+
 	    std::vector<int> image_size;
 	    for(int i = 0; i < batch_size; ++i) {
 		image_size.push_back(ori_heights[i]);
 		image_size.push_back(ori_widths[i]);
 	    }
-	    im_size_tensor.name = "im_size";
-	    im_size_tensor.shape = std::vector<int>({ batch_size, 2});
-            im_size_tensor.data.Reset(image_size.data(), batch_size * 2 * sizeof(int));
-	    im_size_tensor.dtype = paddle::PaddleDType::INT32;
 
+	    std::vector<float> image_size_f;
+	    for(int i = 0; i < batch_size; ++i) {
+		image_size_f.push_back(ori_heights[i]);
+		image_size_f.push_back(ori_widths[i]);
+		image_size_f.push_back(1.0);
+	    }
+
+	    int feeds_size = _model_config._feeds_size;
+	    im_size_tensor.name = "im_size";
+	    if(feeds_size == 2) {
+                im_size_tensor.shape = std::vector<int>({ batch_size, 2});
+                im_size_tensor.data.Reset(image_size.data(), batch_size * 2 * sizeof(int));
+	        im_size_tensor.dtype = paddle::PaddleDType::INT32;
+            }
+	    else if(feeds_size == 3) {
+                im_size_tensor.shape = std::vector<int>({ batch_size, 3});
+                im_size_tensor.data.Reset(image_size_f.data(), batch_size * 3 * sizeof(float));
+	        im_size_tensor.dtype = paddle::PaddleDType::FLOAT32;
+            }
+	    std::cout << "Feed size = " << feeds_size << std::endl;
             feeds.push_back(im_tensor);
+	    if(_model_config._feeds_size > 2) {
+	        feeds.push_back(im_info_tensor);
+            }
             feeds.push_back(im_size_tensor);
             _outputs.clear();
 
@@ -165,7 +200,6 @@ namespace PaddleSolution {
 
         auto& input_buffer = _buffer;
         auto& imgs_batch = _imgs_batch;
-        input_buffer.resize(batch_buffer_size);
 
         for (int u = 0; u < batch; ++u) {
             int batch_size = default_batch_size;
@@ -175,7 +209,8 @@ namespace PaddleSolution {
 
             int real_buffer_size = batch_size * channels * eval_width * eval_height;
             std::vector<paddle::PaddleTensor> feeds;
-            input_buffer.resize(real_buffer_size);
+            //input_buffer.resize(real_buffer_size);
+	    input_buffer.clear();
             imgs_batch.clear();
             for (int i = 0; i < batch_size; ++i) {
                 int idx = u * default_batch_size + i;
@@ -184,25 +219,70 @@ namespace PaddleSolution {
 	    
             std::vector<int> ori_widths;
 	    std::vector<int> ori_heights;
+	    std::vector<int> resize_widths;
+	    std::vector<int> resize_heights;
+            std::vector<float> scale_ratios;
             ori_widths.resize(batch_size);
             ori_heights.resize(batch_size);
+	    resize_widths.resize(batch_size);
+	    resize_heights.resize(batch_size);
+	    scale_ratios.resize(batch_size);
 
-            if (!_preprocessor->batch_process(imgs_batch, input_buffer.data(), ori_widths.data(), ori_heights.data())) {
+            if (!_preprocessor->batch_process(imgs_batch, input_buffer, ori_widths.data(), ori_heights.data(),
+					      resize_widths.data(), resize_heights.data(), scale_ratios.data())){
 		std::cout << "Failed to preprocess!" << std::endl;
                 return -1;
             }
-            auto im_tensor = _main_predictor->GetInputTensor("image");
-            im_tensor->Reshape({ batch_size, channels, eval_height, eval_width });
+	    std::vector<std::string> input_names = _main_predictor->GetInputNames();
+//	    for(auto name : input_names){
+//		std::cout << name << std::endl;
+//	    }
+//	    std::cout << "Input buffer size = " << input_buffer.size() << std::endl;
+            auto im_tensor = _main_predictor->GetInputTensor(input_names.front());
+            im_tensor->Reshape({ batch_size, channels, resize_heights[0], resize_widths[0]});
             im_tensor->copy_from_cpu(input_buffer.data());
-	    
+ 
+//           for(int i = 0; i < resize_widths[0]; ++i) {
+//		std::cout << input_buffer[i]  << " ";
+//	    } 
+//            std::cout << std::endl;
+	    if(input_names.size() > 2){
+     	        std::vector<float> image_infos;
+                for(int i = 0; i < batch_size; ++i) {
+		    image_infos.push_back(resize_heights[i]);
+		    image_infos.push_back(resize_widths[i]);
+		    image_infos.push_back(scale_ratios[i]);
+		    std::cout << resize_heights[i] << " " << resize_widths[i] << " " << scale_ratios[i] << std::endl;
+	        }		
+	    	auto im_info_tensor = _main_predictor->GetInputTensor(input_names[1]);
+	        im_info_tensor->Reshape({batch_size, 3});
+	        im_info_tensor->copy_from_cpu(image_infos.data());
+	    }
+
 	    std::vector<int> image_size;
 	    for(int i = 0; i < batch_size; ++i) {
 		image_size.push_back(ori_heights[i]);
 		image_size.push_back(ori_widths[i]);
 	    }
-            auto im_size_tensor = _main_predictor->GetInputTensor("im_size");
-	    im_size_tensor->Reshape({batch_size, 2});
-	    im_size_tensor->copy_from_cpu(image_size.data());
+            std::vector<float> image_size_f;
+	    for(int i = 0; i < batch_size; ++i) {
+		image_size_f.push_back(static_cast<float>(ori_heights[i]));
+		image_size_f.push_back(static_cast<float>(ori_widths[i]));
+		image_size_f.push_back(1.0);
+		
+	//	std::cout << ori_heights[i] << " " << ori_widths[i] << " 1.0" << std::endl;
+	    }
+             
+            auto im_size_tensor = _main_predictor->GetInputTensor(input_names.back());
+	    if(input_names.size() > 2) {
+	        im_size_tensor->Reshape({batch_size, 3});
+	    	im_size_tensor->copy_from_cpu(image_size_f.data());
+	    }
+	    else{
+	        im_size_tensor->Reshape({batch_size, 2});
+	    	im_size_tensor->copy_from_cpu(image_size.data());
+	    }
+	    
 
             auto t1 = std::chrono::high_resolution_clock::now();
             _main_predictor->ZeroCopyRun();

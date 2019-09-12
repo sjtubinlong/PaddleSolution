@@ -2,25 +2,31 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <map>
 
 #include <yaml-cpp/yaml.h>
 namespace PaddleSolution {
 
     class PaddleSegModelConfigPaser {
+	std::map<std::string, int> _scaling_map;
     public:
         PaddleSegModelConfigPaser()
             :_class_num(0),
             _channels(0),
             _use_gpu(0),
             _batch_size(1),
-            _crop_short_size(0),
+            _target_short_size(0),
             _model_file_name("__model__"),
-            _param_file_name("__params__") {
+            _param_file_name("__params__"),
+	    _scaling_map{{"UNPADDING", 0},
+			 {"RANGE_SCALING",1}}, 
+            _feeds_size(1) {
         }
         ~PaddleSegModelConfigPaser() {
         }
 
         void reset() {
+	    _crop_size.clear();
             _resize.clear();
             _mean.clear();
             _std.clear();
@@ -28,11 +34,14 @@ namespace PaddleSolution {
             _class_num = 0;
             _channels = 0;
             _use_gpu = 0;
-            _crop_short_size = 0;
+            _target_short_size = 0;
             _batch_size = 1;
-            _model_file_name.clear();
-            _model_path.clear();
-            _param_file_name.clear();
+            _model_file_name = "__model__";
+            _model_path = "./";
+            _param_file_name="__params__";
+	    _resize_type = 0;
+	    _resize_max_size = 0;
+	    _feeds_size = 1;
         }
 
         std::string process_parenthesis(const std::string& str) {
@@ -62,8 +71,12 @@ namespace PaddleSolution {
             reset();
 
             YAML::Node config = YAML::LoadFile(conf_file);
+	    // 0. get crop_size
+	    auto crop_str = config["DEPLOY"]["CROP_SIZE"].as<std::string>();
+	    _crop_size = parse_str_to_vec<int>(process_parenthesis(crop_str));	    
+
             // 1. get resize
-            auto str = config["DEPLOY"]["EVAL_CROP_SIZE"].as<std::string>();
+            auto str = config["DEPLOY"]["SCALE_RESIZE"].as<std::string>();
             _resize = parse_str_to_vec<int>(process_parenthesis(str));
 
             // 2. get mean
@@ -96,14 +109,27 @@ namespace PaddleSolution {
             _batch_size = config["DEPLOY"]["BATCH_SIZE"].as<int>();
             // 14. channels
             _channels = config["DEPLOY"]["CHANNELS"].as<int>();
-            // 15. crop_short_size
-            _crop_short_size = config["DEPLOY"]["CROP_SHORT_SIZE"].as<int>();
+            // 15. target_short_size
+            _target_short_size = config["DEPLOY"]["TARGET_SHORT_SIZE"].as<int>();
+	    // 16.resize_type
+	    if(_scaling_map.find(config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()) != _scaling_map.end()) {
+	        _resize_type = _scaling_map[config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()];
+	    }
+	    else{
+		_resize_type = 0;
+	    }
+	    // 17.resize_max_size
+	    _resize_max_size = config["DEPLOY"]["RESIZE_MAX_SIZE"].as<int>();
+            // 18.feeds_size
+	    if(config["DEPLOY"]["FEEDS_SIZE"].IsDefined()){
+		_feeds_size = config["DEPLOY"]["FEEDS_SIZE"].as<int>();	
+            }
             return true;
         }
 
         void debug() const {
             
-            std::cout << "EVAL_CROP_SIZE: (" << _resize[0] << ", " << _resize[1] << ")" << std::endl;
+            std::cout << "SCALE_RESIZE: (" << _resize[0] << ", " << _resize[1] << ")" << std::endl;
 
             std::cout << "MEAN: [";
             for (int i = 0; i < _mean.size(); ++i) {
@@ -125,7 +151,7 @@ namespace PaddleSolution {
                 }
             }
             std::cout << "]" << std::endl;
-            std::cout << "DEPLOY.CROP_SHORT_SIZE: " << _crop_short_size << std::endl;
+            std::cout << "DEPLOY.TARGET_SHORT_SIZE: " << _target_short_size << std::endl;
             std::cout << "DEPLOY.IMAGE_TYPE: " << _img_type << std::endl;
             std::cout << "DEPLOY.NUM_CLASSES: " << _class_num << std::endl;
             std::cout << "DEPLOY.CHANNELS: " << _channels << std::endl;
@@ -137,8 +163,15 @@ namespace PaddleSolution {
             std::cout << "DEPLOY.PREDICTOR_MODE: " << _predictor_mode << std::endl;
             std::cout << "DEPLOY.BATCH_SIZE: " << _batch_size << std::endl;
         }
-
-        // DEPLOY.EVAL_CROP_SIZE
+        // DEPLOY.FEEDS_SIZE
+	int _feeds_size;
+	// DEPLOY.RESIZE_TYPE  0:unpadding 1:rangescaling
+        int _resize_type;
+	// DEPLOY.RESIZE_MAX_SIZE
+        int _resize_max_size;
+	// DEPLOY.CROP_SIZE
+	std::vector<int> _crop_size;
+        // DEPLOY.SCALE_RESIZE
         std::vector<int> _resize;
         // DEPLOY.MEAN
         std::vector<float> _mean;
@@ -146,8 +179,8 @@ namespace PaddleSolution {
         std::vector<float> _std;
         // DEPLOY.IMAGE_TYPE
         std::string _img_type;
-        // DEPLOY.CROP_SHORT_SIZE
-        int _crop_short_size;
+        // DEPLOY.TARGET_SHORT_SIZE
+        int _target_short_size;
         // DEPLOY.NUM_CLASSES
         int _class_num;
         // DEPLOY.CHANNELS

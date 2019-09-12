@@ -3,6 +3,7 @@
 #include <glog/logging.h>
 
 #include "preprocessor_classify.h"
+#include "utils/utils.h"
 
 namespace PaddleSolution {
 
@@ -17,18 +18,22 @@ namespace PaddleSolution {
         auto ori_w = im.cols;
         auto ori_h = im.rows;
         // 2. resize
-        float percent = float(_config->_crop_short_size) / std::min(im.cols, im.rows);
-        int rw = round((float)im.cols * percent);
-        int rh = round((float)im.rows * percent);
+	int rw = im.cols;
+        int rh = im.rows;
+	float im_scale_ratio = 1;
+//        std::cout << _config->_resize_type << " w: " << rw << " h:" << rh << " target short size:" << _config->_target_short_size << " max_size:" << _config->_resize_max_size << std::endl;
+	utils::scaling(_config->_resize_type, rw, rh, _config->_resize[0], _config->_resize[1], _config->_target_short_size, _config->_resize_max_size, im_scale_ratio);
+  //      std::cout << "w = " << rw << " h = " << rh << " scale_ratio = " << im_scale_ratio << std::endl;
         cv::Size resize_size(rw, rh);
         if (ori_h != rh || ori_w != rw) {
             cv::resize(im, im, resize_size);
         }
         // 3. crop from the center
-        int edge = _config->_resize[1];
-        int yy = static_cast<int>((im.rows - edge) / 2);
-        int xx = static_cast<int>((im.cols - edge) / 2);
-	im = cv::Mat(im, cv::Rect(xx, yy, edge, edge));
+        int edgey = _config->_crop_size[1];
+        int edgex = _config->_crop_size[0];
+        int yy = static_cast<int>((im.rows - edgey) / 2);
+        int xx = static_cast<int>((im.cols - edgex) / 2);
+	im = cv::Mat(im, cv::Rect(xx, yy, edgex, edgey));
         cvtColor(im, im, CV_BGR2RGB);
         // 4. (img - mean) / std
         int hh = im.rows;
