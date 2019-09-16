@@ -200,8 +200,8 @@ if (NOT WIN32)
     set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/liblibwebp${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DEPS ${DEPS} ${OPENCV_DIR}/share/OpenCV/3rdparty/lib/libzlib${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
-message(${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
+# message(${CMAKE_CXX_FLAGS})
+# set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
 
 SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp 
     preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
