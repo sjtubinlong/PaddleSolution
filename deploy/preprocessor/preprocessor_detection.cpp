@@ -7,7 +7,6 @@
 #include "utils/utils.h"
 
 namespace PaddleSolution {
-    std::mutex gMutex;
     bool DetectionPreProcessor::single_process(const std::string& fname, std::vector<float> &vec_data, int* ori_w, int* ori_h, int* resize_w, int* resize_h, float* scale_ratio) {
         cv::Mat im1 = cv::imread(fname, -1);
 	cv::Mat im;
@@ -27,24 +26,11 @@ namespace PaddleSolution {
         *ori_h = im.rows;
         cv::cvtColor(im, im, cv::COLOR_BGR2RGB);      
         channels = im.channels();
-        //print whole image
-//	for(int h = 0; h < im.rows; ++h) {
-//	    const uchar* ptr = im.ptr<uchar>(h);
-//	    for(int w = 0; w < im.cols; ++w) {
-//		for(int c = 0; c < channels; ++c) {
-//		    std::cout << (int)ptr[w * channels + c] << " ";
-//		}
-//		std::cout << std::endl;
-//	    } 
-//            std::cout << std::endl;
-//	}
-
 
 	//resize
         int rw = im.cols;
         int rh = im.rows;
 	float im_scale_ratio;
-	std::cout << im.cols << "," << im.rows << std::endl;
 	utils::scaling(_config->_resize_type, rw, rh, _config->_resize[0], _config->_resize[1], _config->_target_short_size, _config->_resize_max_size, im_scale_ratio);
         cv::Size resize_size(rw, rh);
 	*resize_w = rw;
@@ -62,15 +48,10 @@ namespace PaddleSolution {
         }
 
 	vec_data.resize(channels * rw * rh);
-//	std::cout << channels << " " << im.cols << " " << im.rows << " " << im_scale_ratio << std::endl;
-//        printf("%d %d %10.7f\n", im.cols, im.rows, im_scale_ratio);
         float *data = vec_data.data();
 
         float* pmean = _config->_mean.data();
         float* pscale = _config->_std.data();
-//	for(int i = 0; i <  channels; ++i){
-//	    std::cout << "mean = " << pmean[i] << " std = " << pscale[i] << std::endl;
-//	}
         for (int h = 0; h < rh; ++h) {
             const uchar* uptr = im.ptr<uchar>(h);
             const float* fptr = im.ptr<float>(h);
@@ -90,22 +71,10 @@ namespace PaddleSolution {
                 }
             }
         }
-//	const uchar* ptr = im.ptr<uchar>(0);
-//        const float* ptr = im.ptr<float>(0);
-//	for(int i = 0; i < rw; ++i) {
-//	    std::cout << (int)((data[i]*pscale[0] + pmean[0])*255) << " ";
-//	    std::cout << (int)ptr[i * channels] << " ";
-//	    std::cout << ptr[i * channels] << " ";
-//	    std::cout << data[i] << " ";
-//	    if((i + 1) % 40 == 0){
-//		std::cout << std::endl;
-//            }
-//	}
-//	std::cout << std::endl;
         return true;
     }
 
-    bool DetectionPreProcessor::batch_process(const std::vector<std::string>& imgs, std::vector<float> &data, int* ori_w, int* ori_h, int* resize_w, int* resize_h, float* scale_ratio) {
+    bool DetectionPreProcessor::batch_process(const std::vector<std::string>& imgs, std::vector<std::vector<float>> &data, int* ori_w, int* ori_h, int* resize_w, int* resize_h, float* scale_ratio) {
         auto ic = _config->_channels;
         auto iw = _config->_resize[0];
         auto ih = _config->_resize[1];
@@ -117,12 +86,10 @@ namespace PaddleSolution {
 	    int* resize_width = &resize_w[i];
 	    int* resize_height = &resize_h[i];
 	    float* sr = &scale_ratio[i];
-            threads.emplace_back([this, &data, path, width, height, resize_width, resize_height, sr] {
-                std::vector<float> buffer;
+            threads.emplace_back([this, &data, i, path, width, height, resize_width, resize_height, sr] {
+		std::vector<float> buffer;
                 single_process(path, buffer, width, height, resize_width, resize_height, sr);
-		gMutex.lock();
-		data.insert(data.end(), buffer.begin(), buffer.end());
-		gMutex.unlock();
+		data[i] = buffer;
                 });
         }
         for (auto& t : threads) {

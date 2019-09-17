@@ -1,7 +1,41 @@
 #include "detection_predictor.h"
+#include <cstring>
+
+/* lod_buffer: every item in lod_buffer is an image matrix after preprocessing
+ * input_buffer: same data with lod_buffer after flattening to 1-D vector and padding, needed to be empty before using this function
+ */
+void padding_minibatch(const std::vector<std::vector<float>> &lod_buffer, std::vector<float> &input_buffer, 
+                       std::vector<int> &resize_heights, std::vector<int> &resize_widths, int channels) {
+    int batch_size = lod_buffer.size();
+    int max_h = -1;
+    int max_w = -1;
+    for(int i = 0; i < batch_size; ++i) {
+	max_h = (max_h > resize_heights[i])? max_h:resize_heights[i];
+	max_w = (max_w > resize_widths[i])? max_w:resize_widths[i];
+    }
+    input_buffer.insert(input_buffer.end(), batch_size * channels * max_h * max_w, 0);
+    // flatten tensor and padding
+    for(int i = 0; i < lod_buffer.size(); ++i) {
+	float *input_buffer_ptr = input_buffer.data() + i * channels * max_h * max_w;
+	const float *lod_ptr = lod_buffer[i].data();
+	for(int c = 0; c < channels; ++c) {
+	    for(int h = 0; h < resize_heights[i]; ++h) {
+		 memcpy(input_buffer_ptr, lod_ptr, resize_widths[i] * sizeof(float));
+		 lod_ptr += resize_widths[i];
+		 input_buffer_ptr += max_w;
+	    }
+	    input_buffer_ptr += (max_h - resize_heights[i]) * max_w;
+	}
+    }
+    // change resize w, h
+    for(int i = 0; i < batch_size; ++i){
+        resize_widths[i] = max_w;
+	resize_heights[i] = max_h;
+    }
+}
 
 namespace PaddleSolution {
-
+    
     int DetectionPredictor::init(const std::string& conf) {
         if (!_model_config.load_config(conf)) {
             LOG(FATAL) << "Fail to load config file: [" << conf << "]";
@@ -95,10 +129,13 @@ namespace PaddleSolution {
 	    resize_heights.resize(batch_size);
 	    scale_ratios.resize(batch_size);            
 
-            if (!_preprocessor->batch_process(imgs_batch, input_buffer, ori_widths.data(), ori_heights.data(),
+	    std::vector<std::vector<float>> lod_buffer(batch_size);
+            if (!_preprocessor->batch_process(imgs_batch, lod_buffer, ori_widths.data(), ori_heights.data(),
 					      resize_widths.data(), resize_heights.data(), scale_ratios.data())) {
                 return -1;
             }
+	    // flatten and padding 
+	    padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels);
             paddle::PaddleTensor im_tensor, im_size_tensor, im_info_tensor;
 
             im_tensor.name = "image";
@@ -227,32 +264,28 @@ namespace PaddleSolution {
 	    resize_widths.resize(batch_size);
 	    resize_heights.resize(batch_size);
 	    scale_ratios.resize(batch_size);
-
-            if (!_preprocessor->batch_process(imgs_batch, input_buffer, ori_widths.data(), ori_heights.data(),
+	    
+	    std::vector<std::vector<float>> lod_buffer(batch_size);
+            if (!_preprocessor->batch_process(imgs_batch, lod_buffer, ori_widths.data(), ori_heights.data(),
 					      resize_widths.data(), resize_heights.data(), scale_ratios.data())){
 		std::cout << "Failed to preprocess!" << std::endl;
                 return -1;
             }
+
+	    //flatten tensor
+            padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels);
+
 	    std::vector<std::string> input_names = _main_predictor->GetInputNames();
-//	    for(auto name : input_names){
-//		std::cout << name << std::endl;
-//	    }
-//	    std::cout << "Input buffer size = " << input_buffer.size() << std::endl;
             auto im_tensor = _main_predictor->GetInputTensor(input_names.front());
-            im_tensor->Reshape({ batch_size, channels, resize_heights[0], resize_widths[0]});
+            im_tensor->Reshape({ batch_size, channels, resize_heights[0], resize_widths[0] });
             im_tensor->copy_from_cpu(input_buffer.data());
  
-//           for(int i = 0; i < resize_widths[0]; ++i) {
-//		std::cout << input_buffer[i]  << " ";
-//	    } 
-//            std::cout << std::endl;
 	    if(input_names.size() > 2){
      	        std::vector<float> image_infos;
                 for(int i = 0; i < batch_size; ++i) {
 		    image_infos.push_back(resize_heights[i]);
 		    image_infos.push_back(resize_widths[i]);
 		    image_infos.push_back(scale_ratios[i]);
-		    std::cout << resize_heights[i] << " " << resize_widths[i] << " " << scale_ratios[i] << std::endl;
 	        }		
 	    	auto im_info_tensor = _main_predictor->GetInputTensor(input_names[1]);
 	        im_info_tensor->Reshape({batch_size, 3});
@@ -269,8 +302,6 @@ namespace PaddleSolution {
 		image_size_f.push_back(static_cast<float>(ori_heights[i]));
 		image_size_f.push_back(static_cast<float>(ori_widths[i]));
 		image_size_f.push_back(1.0);
-		
-	//	std::cout << ori_heights[i] << " " << ori_widths[i] << " 1.0" << std::endl;
 	    }
              
             auto im_size_tensor = _main_predictor->GetInputTensor(input_names.back());
