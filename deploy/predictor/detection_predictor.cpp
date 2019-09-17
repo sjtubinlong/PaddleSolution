@@ -1,11 +1,12 @@
 #include "detection_predictor.h"
 #include <cstring>
+#include <cmath>
 
 /* lod_buffer: every item in lod_buffer is an image matrix after preprocessing
  * input_buffer: same data with lod_buffer after flattening to 1-D vector and padding, needed to be empty before using this function
  */
 void padding_minibatch(const std::vector<std::vector<float>> &lod_buffer, std::vector<float> &input_buffer, 
-                       std::vector<int> &resize_heights, std::vector<int> &resize_widths, int channels) {
+                       std::vector<int> &resize_heights, std::vector<int> &resize_widths, int channels, int coarsest_stride = 1) {
     int batch_size = lod_buffer.size();
     int max_h = -1;
     int max_w = -1;
@@ -13,6 +14,9 @@ void padding_minibatch(const std::vector<std::vector<float>> &lod_buffer, std::v
 	max_h = (max_h > resize_heights[i])? max_h:resize_heights[i];
 	max_w = (max_w > resize_widths[i])? max_w:resize_widths[i];
     }
+    max_h = static_cast<int>(ceil(static_cast<float>(max_h) / static_cast<float>(coarsest_stride)) * coarsest_stride);
+    max_w = static_cast<int>(ceil(static_cast<float>(max_w) / static_cast<float>(coarsest_stride)) * coarsest_stride);
+    std::cout << "max_w: " << max_w << " max_h: " << max_h << std::endl;
     input_buffer.insert(input_buffer.end(), batch_size * channels * max_h * max_w, 0);
     // flatten tensor and padding
     for(int i = 0; i < lod_buffer.size(); ++i) {
@@ -135,7 +139,7 @@ namespace PaddleSolution {
                 return -1;
             }
 	    // flatten and padding 
-	    padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels);
+	    padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels, _model_config._coarsest_stride);
             paddle::PaddleTensor im_tensor, im_size_tensor, im_info_tensor;
 
             im_tensor.name = "image";
@@ -273,7 +277,7 @@ namespace PaddleSolution {
             }
 
 	    //flatten tensor
-            padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels);
+	    padding_minibatch(lod_buffer, input_buffer, resize_heights, resize_widths, channels, _model_config._coarsest_stride);
 
 	    std::vector<std::string> input_names = _main_predictor->GetInputNames();
             auto im_tensor = _main_predictor->GetInputTensor(input_names.front());

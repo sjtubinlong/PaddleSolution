@@ -20,7 +20,9 @@ namespace PaddleSolution {
             _param_file_name("__params__"),
 	    _scaling_map{{"UNPADDING", 0},
 			 {"RANGE_SCALING",1}}, 
-            _feeds_size(1) {
+            _feeds_size(1),
+	    _coarsest_stride(1)
+	     {
         }
         ~PaddleSegModelConfigPaser() {
         }
@@ -42,6 +44,7 @@ namespace PaddleSolution {
 	    _resize_type = 0;
 	    _resize_max_size = 0;
 	    _feeds_size = 1;
+ 	    _coarsest_stride = 1;
         }
 
         std::string process_parenthesis(const std::string& str) {
@@ -124,6 +127,10 @@ namespace PaddleSolution {
 	    if(config["DEPLOY"]["FEEDS_SIZE"].IsDefined()){
 		_feeds_size = config["DEPLOY"]["FEEDS_SIZE"].as<int>();	
             }
+	    // 19. coarsest_stride
+	    if(config["DEPLOY"]["COARSEST_STRIDE"].IsDefined()) {
+		_coarsest_stride = config["DEPLOY"]["COARSEST_STRIDE"].as<int>();
+	    }
             return true;
         }
 
@@ -163,6 +170,8 @@ namespace PaddleSolution {
             std::cout << "DEPLOY.PREDICTOR_MODE: " << _predictor_mode << std::endl;
             std::cout << "DEPLOY.BATCH_SIZE: " << _batch_size << std::endl;
         }
+	//DEPLOY.COARSEST_STRIDE
+	int _coarsest_stride;
         // DEPLOY.FEEDS_SIZE
 	int _feeds_size;
 	// DEPLOY.RESIZE_TYPE  0:unpadding 1:rangescaling
