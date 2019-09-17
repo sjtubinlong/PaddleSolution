@@ -98,5 +98,5 @@ cd /d D:\projects\PaddleSeg\inference\out\x64-Release
 demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
-更详细说明请参考ReadMe文档： [预测和可视化部分](../ReadMe.md)
+更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)
 

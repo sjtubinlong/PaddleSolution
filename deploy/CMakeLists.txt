@@ -211,18 +211,18 @@ SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp
 ADD_LIBRARY(libpaddleseg_inference STATIC ${PADDLESEG_INFERENCE_SRCS})
 target_link_libraries(libpaddleseg_inference ${DEPS})
 
-add_executable(demo demo.cpp)
+add_executable(seg_demo seg_demo.cpp)
 add_executable(classify_demo classify_demo.cpp)
 add_executable(detection_demo detection_demo.cpp)
 
 ADD_DEPENDENCIES(libpaddleseg_inference ext-yaml-cpp)
-ADD_DEPENDENCIES(demo ext-yaml-cpp libpaddleseg_inference)
-target_link_libraries(demo ${DEPS} libpaddleseg_inference)
+ADD_DEPENDENCIES(seg_demo ext-yaml-cpp libpaddleseg_inference)
+target_link_libraries(seg_demo ${DEPS} libpaddleseg_inference)
 target_link_libraries(classify_demo ${DEPS} libpaddleseg_inference)
 target_link_libraries(detection_demo ${DEPS} libpaddleseg_inference)
 
 if (WIN32)
-    add_custom_command(TARGET demo POST_BUILD
+    add_custom_command(TARGET seg_demo POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/mklml.dll ./mklml.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/libiomp5md.dll ./libiomp5md.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mkldnn/lib/mkldnn.dll ./mkldnn.dll
