@@ -75,11 +75,12 @@ namespace PaddleSolution {
 
             YAML::Node config = YAML::LoadFile(conf_file);
 	    // 0. get crop_size
-	    auto crop_str = config["DEPLOY"]["CROP_SIZE"].as<std::string>();
-	    _crop_size = parse_str_to_vec<int>(process_parenthesis(crop_str));	    
-
+            if(config["DEPLOY"]["CROP_SIZE"].IsDefined()) {
+	        auto crop_str = config["DEPLOY"]["CROP_SIZE"].as<std::string>();
+     	        _crop_size = parse_str_to_vec<int>(process_parenthesis(crop_str));	    
+            }
             // 1. get resize
-            auto str = config["DEPLOY"]["SCALE_RESIZE"].as<std::string>();
+            auto str = config["DEPLOY"]["EVAL_CROP_SIZE"].as<std::string>();
             _resize = parse_str_to_vec<int>(process_parenthesis(str));
 
             // 2. get mean
@@ -113,10 +114,13 @@ namespace PaddleSolution {
             // 14. channels
             _channels = config["DEPLOY"]["CHANNELS"].as<int>();
             // 15. target_short_size
-            _target_short_size = config["DEPLOY"]["TARGET_SHORT_SIZE"].as<int>();
-	    // 16.resize_type
-	    if(_scaling_map.find(config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()) != _scaling_map.end()) {
-	        _resize_type = _scaling_map[config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()];
+	    if(config["DEPLOY"]["TARGET_SHORT_SIZE"].IsDefined()) {
+            	_target_short_size = config["DEPLOY"]["TARGET_SHORT_SIZE"].as<int>();
+	    }
+	    // 16.resize_type            
+	    if(config["DEPLOY"]["RESIZE_TYPE"].IsDefined() && 
+                _scaling_map.find(config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()) != _scaling_map.end()) {
+                _resize_type = _scaling_map[config["DEPLOY"]["RESIZE_TYPE"].as<std::string>()];
 	    }
 	    else{
 		_resize_type = 0;
@@ -174,7 +178,7 @@ namespace PaddleSolution {
 	int _coarsest_stride;
         // DEPLOY.FEEDS_SIZE
 	int _feeds_size;
-	// DEPLOY.RESIZE_TYPE  0:unpadding 1:rangescaling
+	// DEPLOY.RESIZE_TYPE  0:unpadding 1:rangescaling  Default:0
         int _resize_type;
 	// DEPLOY.RESIZE_MAX_SIZE
         int _resize_max_size;
