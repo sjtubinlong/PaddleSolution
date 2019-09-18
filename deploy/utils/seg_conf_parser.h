@@ -74,14 +74,18 @@ namespace PaddleSolution {
             reset();
 
             YAML::Node config = YAML::LoadFile(conf_file);
+            // 1. get resize
+            auto str = config["DEPLOY"]["EVAL_CROP_SIZE"].as<std::string>();
+            _resize = parse_str_to_vec<int>(process_parenthesis(str));
+
 	    // 0. get crop_size
             if(config["DEPLOY"]["CROP_SIZE"].IsDefined()) {
 	        auto crop_str = config["DEPLOY"]["CROP_SIZE"].as<std::string>();
      	        _crop_size = parse_str_to_vec<int>(process_parenthesis(crop_str));	    
             }
-            // 1. get resize
-            auto str = config["DEPLOY"]["EVAL_CROP_SIZE"].as<std::string>();
-            _resize = parse_str_to_vec<int>(process_parenthesis(str));
+	    else {
+		_crop_size = _resize;
+	    }
 
             // 2. get mean
             for (const auto& item : config["DEPLOY"]["MEAN"]) {
@@ -126,7 +130,9 @@ namespace PaddleSolution {
 		_resize_type = 0;
 	    }
 	    // 17.resize_max_size
-	    _resize_max_size = config["DEPLOY"]["RESIZE_MAX_SIZE"].as<int>();
+	    if(config["DEPLOY"]["RESIZE_MAX_SIZE"].IsDefined()) {
+	    	_resize_max_size = config["DEPLOY"]["RESIZE_MAX_SIZE"].as<int>();
+	    }
             // 18.feeds_size
 	    if(config["DEPLOY"]["FEEDS_SIZE"].IsDefined()){
 		_feeds_size = config["DEPLOY"]["FEEDS_SIZE"].as<int>();	
