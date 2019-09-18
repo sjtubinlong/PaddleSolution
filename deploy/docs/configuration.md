@@ -36,7 +36,8 @@ DEPLOY:
     # 含义：当使用UNPADDING模式时，会将图像直接resize到该尺寸。
     EVAL_CROP_SIZE: (513, 513)
     # 类型：optional int
-    # 含义：当使用RANGE_SCALING模式时，图像短边需要对齐该字段的值，长边会同比例的缩放，从而在保持图像长宽比例不变的情况下resize到新的尺寸。默认值为0。
+    # 含义：当使用RANGE_SCALING模式时，图像短边需要对齐该字段的值，长边会同比例
+    # 的缩放，从而在保持图像长宽比例不变的情况下resize到新的尺寸。默认值为0。
     TARGET_SHORT_SIZE: 800
     # 类型：optional int
     # 含义: 当使用RANGE_SCALING模式时,长边不能缩放到比该字段的值大。默认值为0。
@@ -74,5 +75,5 @@ DEPLOY:
     FEEDS_SIZE: 2
     # 类型: optional int
     # 含义: 将图像的边变为该字段的值的整数倍。默认值为1。
-    COARSEST_STRIDE: 32
+    COARSEST_STRIDE: 32 
 ```

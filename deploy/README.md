@@ -143,8 +143,8 @@ D:\projects\PaddleSeg\inference\build\Release>demo.exe --conf=D:\\projects\\Padd
 文件`demo.jpg`预测的结果存储在`demo_jpg.png`中，可视化结果在`demo_jpg_scoremap.png`中， 原始尺寸的预测结果在`demo_jpg_recover.png`中。
 
 输入原图  
-![原图](images/humanseg/demo.jpeg)
+![原图](images/humanseg/demo.jpg)
 
 输出预测结果   
-![结果图](images/humanseg/demo_jpeg_recover.png)
+![结果图](images/humanseg/demo_jpg_recover.png)
 
