@@ -34,18 +34,18 @@ deploy
 ├── tools
 │   └── visualize.py # 示例人像分割模型结果可视化脚本
 ├── docs
-|   ├── linux_build.md # Linux 编译指南
-|   ├── windows_vs2015_build.md # windows VS2015编译指南
+│   ├── linux_build.md # Linux 编译指南
+│   ├── windows_vs2015_build.md # windows VS2015编译指南
 │   └── windows_vs2019_build.md # Windows VS2019编译指南
-|
+│
 ├── utils # 一些基础公共函数
-|
+│
 ├── preprocess # 数据预处理相关代码
-|
+│
 ├── predictor # 模型加载和预测相关代码
-|
+│
 ├── CMakeList.txt # cmake编译入口文件
-|
+│
 └── external-cmake # 依赖的外部项目cmake（目前仅有yaml-cpp）
 
 ```
@@ -60,7 +60,7 @@ deploy
 
 ## 预测并可视化结果
 
-完成编译后，便生成了需要的可执行文件和链接库，然后执行以下步骤：
+完成编译后，便生成了需要的可执行文件和链接库。这里以部署人像分割模型为例，介绍搭建图像分类、检测、分割模型的通用流程。
 
 ### 1. 下载模型文件
 我们提供了一个人像分割模型示例用于测试，点击右侧地址下载：[示例模型下载地址](https://paddleseg.bj.bcebos.com/inference_model/deeplabv3p_xception65_humanseg.tgz)
@@ -69,7 +69,7 @@ deploy
 ```
 deeplabv3p_xception65_humanseg
 ├── __model__ # 模型文件
-|
+│
 └── __params__ # 参数文件
 ```
 解压后把上述目录拷贝到合适的路径：
@@ -81,9 +81,9 @@ deeplabv3p_xception65_humanseg
 
 ### 2. 修改配置
 
-基于`PaddleSeg`训练的模型导出时，会自动生成对应的预测模型配置文件，请参考文档：[模型导出](../docs/export_model.md)。
+基于`PaddleSeg`训练的模型导出时，会自动生成对应的预测模型配置文件，请参考文档：[模型导出](./docs/model_export.md)。
 
-`inference`源代码(即本目录)的`conf`目录下提供了示例人像分割模型的配置文件`humanseg.yaml`, 相关的字段含义和说明如下：
+`deploy`源代码(即本目录)的`conf`目录下提供了示例人像分割模型的配置文件`humanseg.yaml`, 相关的字段含义和说明如下：
 
 ```yaml
 DEPLOY:
@@ -114,7 +114,7 @@ DEPLOY:
     # 每次预测的 batch_size
     BATCH_SIZE : 3
 ```
-修改字段`MODEL_PATH`的值为你在**上一步**下载并解压的模型文件所放置的目录即可。
+修改字段`MODEL_PATH`的值为你在**上一步**下载并解压的模型文件所放置的目录即可。更多配置文件字段介绍，请参考文档[预测部署方案配置文件说明](./docs/configuration.md)。
 
 ### 3. 执行预测
 
@@ -143,8 +143,8 @@ D:\projects\PaddleSeg\inference\build\Release>demo.exe --conf=D:\\projects\\Padd
 文件`demo.jpg`预测的结果存储在`demo_jpg.png`中，可视化结果在`demo_jpg_scoremap.png`中， 原始尺寸的预测结果在`demo_jpg_recover.png`中。
 
 输入原图  
-![avatar](images/humanseg/demo.jpeg)
+![原图](images/humanseg/demo.jpeg)
 
 输出预测结果   
-![avatar](images/humanseg/demo_jpeg_recover.png)
+![结果图](images/humanseg/demo_jpeg_recover.png)
 
