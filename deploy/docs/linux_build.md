@@ -65,7 +65,7 @@ make install
 执行下列操作时，**注意**把对应的参数改为你的上述依赖库实际路径：
 
 ```shell
-cd /root/projects/PaddleSeg/inference
+cd /root/projects/PaddleSolution/deploy
 mkdir build && cd build
 cmake .. -DWITH_GPU=ON  -DPADDLE_DIR=/root/projects/fluid_inference -DCUDA_LIB=/usr/local/cuda/lib64/ -DOPENCV_DIR=/root/projects/opencv3/ -DCUDNN_LIB=/usr/local/cuda/lib64/
 make
