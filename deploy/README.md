@@ -60,10 +60,10 @@ deploy
 
 ## 预测并可视化结果
 
-完成编译后，便生成了需要的可执行文件和链接库。这里以部署人脸分割模型为例，介绍搭建图像分类、检测、分割模型的通用流程。
+完成编译后，便生成了需要的可执行文件和链接库。这里以部署人像分割模型为例，介绍搭建图像分类、检测、分割模型的通用流程。
 
 ### 1. 下载模型文件
-我们提供了一个图像检测模型示例用于测试，点击右侧地址下载：[示例模型下载地址](https://paddleseg.bj.bcebos.com/inference_model/deeplabv3p_xception65_humanseg.tgz)
+我们提供了一个人像分割模型示例用于测试，点击右侧地址下载：[示例模型下载地址](https://paddleseg.bj.bcebos.com/inference_model/deeplabv3p_xception65_humanseg.tgz)
 
 下载并解压，解压后目录结构如下：
 ```
