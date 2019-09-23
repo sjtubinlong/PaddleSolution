@@ -9,7 +9,7 @@
 - 支持多种图像分类、检测、分割任务，用户通过少量配置即可加载模型完成常见预测任务，比如人像分割、iphone划痕检测等
 - 可扩展性，支持用户针对新模型开发自己特殊的数据预处理、后处理等逻辑
 - 高性能，除了`PaddlePaddle`自身带来的性能优势，我们还针对图像分类、检测、分割的特点对关键步骤进行了性能优化
-
+ 
 
 ## 主要目录和文件
 
@@ -60,10 +60,10 @@ deploy
 
 ## 预测并可视化结果
 
-完成编译后，便生成了需要的可执行文件和链接库。这里以部署人像分割模型为例，介绍搭建图像分类、检测、分割模型的通用流程。
+完成编译后，便生成了需要的可执行文件和链接库。这里以部署人脸分割模型为例，介绍搭建图像分类、检测、分割模型的通用流程。
 
 ### 1. 下载模型文件
-我们提供了一个人像分割模型示例用于测试，点击右侧地址下载：[示例模型下载地址](https://paddleseg.bj.bcebos.com/inference_model/deeplabv3p_xception65_humanseg.tgz)
+我们提供了一个图像检测模型示例用于测试，点击右侧地址下载：[示例模型下载地址](https://paddleseg.bj.bcebos.com/inference_model/deeplabv3p_xception65_humanseg.tgz)
 
 下载并解压，解压后目录结构如下：
 ```
@@ -80,8 +80,6 @@ deeplabv3p_xception65_humanseg
 
 
 ### 2. 修改配置
-
-基于`PaddleSeg`训练的模型导出时，会自动生成对应的预测模型配置文件，请参考文档：[模型导出](./docs/model_export.md)。
 
 `deploy`源代码(即本目录)的`conf`目录下提供了示例人像分割模型的配置文件`humanseg.yaml`, 相关的字段含义和说明如下：
 
@@ -122,11 +120,11 @@ DEPLOY:
 
 `Linux` 系统中执行以下命令：
 ```shell
-./demo --conf=/root/projects/PaddleSeg/inference/conf/humanseg.yaml --input_dir=/root/projects/PaddleSeg/inference/images/humanseg/
+./seg_demo --conf=conf/humanseg.yaml --input_dir=images/humanseg
 ```
 `Windows` 中执行以下命令:
 ```shell
-D:\projects\PaddleSeg\inference\build\Release>demo.exe --conf=D:\\projects\\PaddleSeg\\inference\\conf\\humanseg.yaml --input_dir=D:\\projects\\PaddleSeg\\inference\\images\humanseg\\
+ D:\projects\PaddleSolution\deploy\out\build\x64-Release> .\seg_demo.exe --conf=D:\\projects\\PaddleSolution\\deploy\\conf\\humanseg.yaml --input_dir=D:\\projects\\PaddleSolution\\deploy\\images\humanseg\\
 ```
 
 
@@ -148,3 +146,4 @@ D:\projects\PaddleSeg\inference\build\Release>demo.exe --conf=D:\\projects\\Padd
 输出预测结果   
 ![结果图](images/humanseg/demo_jpg_recover.png)
 
+ 
