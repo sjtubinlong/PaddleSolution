@@ -12,10 +12,10 @@
 
 ### Step1: 下载代码
 
-1. 打开`cmd`, 执行 `cd /d D:\projects`
-2. `git clone http://gitlab.baidu.com/Paddle/PaddleSeg.git`
+1. 打开`cmd`, 执行 `cd D:\projects`
+2. `git clone https://github.com/sjtubinlong/PaddleSolution.git`
 
-`C++`预测库代码在`D:\projects\PaddleSeg\inference` 目录，该目录不依赖任何`PaddleSeg`下其他目录。
+`C++`预测库代码在`D:\projects\PaddleSolution\deploy` 目录，该目录不依赖任何`PaddleSolution`下其他目录。
 
 
 ### Step2: 下载PaddlePaddle C++ 预测库 fluid_inference
@@ -84,13 +84,13 @@ D:\projects\PaddleSeg\inference\build> msbuild /m /p:Configuration=Release cpp_i
 
 上述`Visual Studio 2015`编译产出的可执行文件在`build\release`目录下，切换到该目录：
 ```
-cd /d D:\projects\PaddleSeg\inference\build\release
+cd /d D:\projects\PaddleSolution\deploy\build\release
 ```
 
 之后执行命令：
 
 ```
-demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
+seg_demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
 更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)

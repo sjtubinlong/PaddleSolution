@@ -13,9 +13,9 @@
 ### Step1: 下载代码
 
 1. `mkdir -p /root/projects/ && cd /root/projects`
-2. `git clone https://github.com/PaddlePaddle/PaddleSeg.git`
+2. `git clone https://github.com/sjtubinlong/PaddleSolution.git`
 
-`C++`预测代码在`/root/projects/PaddleSeg/inference` 目录，该目录不依赖任何`PaddleSeg`下其他目录。
+`C++`预测代码在`/root/projects/PaddleSolution/deploy` 目录，该目录不依赖任何`PaddleSolution`下其他目录。
 
 
 ### Step2: 下载PaddlePaddle C++ 预测库 fluid_inference
@@ -77,7 +77,7 @@ make
 执行命令：
 
 ```
-./demo --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
+./seg_demo --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
 更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)
