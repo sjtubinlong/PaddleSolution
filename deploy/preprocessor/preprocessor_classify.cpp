@@ -1,7 +1,7 @@
 #include <thread>
 
 #include <glog/logging.h>
-
+ 
 #include "preprocessor_classify.h"
 #include "utils/utils.h"
 
@@ -14,6 +14,7 @@ namespace PaddleSolution {
             LOG(ERROR) << "Failed to open image: " << fname;
             return false;
         }
+        im.convertTo(im, CV_32FC3, 1/255.0);
         int channels = im.channels();
         auto ori_w = im.cols;
         auto ori_h = im.rows;
@@ -41,14 +42,26 @@ namespace PaddleSolution {
         int cc = im.channels();
         float* pmean = _config->_mean.data();
         float* pscale = _config->_std.data();
+//        for (int h = 0; h < hh; ++h) {
+//            uchar* ptr = im.ptr<uchar>(h);
+//            int im_index = 0;
+//            for (int w = 0; w < ww; ++w) {
+//                for (int c = 0; c < cc; ++c) {
+//                    int top_index = (c * hh + h) * ww + w;
+//                    float pixel = static_cast<float>(ptr[im_index++]);
+//                    pixel = (pixel / 255 - pmean[c]) / pscale[c];
+//                    data[top_index] = pixel;
+//                }
+//            }
+//        }
         for (int h = 0; h < hh; ++h) {
-            uchar* ptr = im.ptr<uchar>(h);
+            float* ptr = im.ptr<float>(h);
             int im_index = 0;
             for (int w = 0; w < ww; ++w) {
                 for (int c = 0; c < cc; ++c) {
                     int top_index = (c * hh + h) * ww + w;
                     float pixel = static_cast<float>(ptr[im_index++]);
-                    pixel = (pixel / 255 - pmean[c]) / pscale[c];
+                    pixel = (pixel - pmean[c]) / pscale[c];
                     data[top_index] = pixel;
                 }
             }
