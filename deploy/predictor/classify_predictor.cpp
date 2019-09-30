@@ -121,14 +121,14 @@ namespace PaddleSolution {
 
             for (int i = 0; i < batch_size; ++i) {
                 float* out_addr = (float*)(_outputs[0].data.data()) + i * (out_num / batch_size);
-		int max_idx = 0;
+            int max_idx = 0;
                 for (int j = 0; j < (out_num / batch_size); ++j) {
-		    if(*(j + out_addr) > *(max_idx + out_addr)){
-			max_idx = j;
-		    }
+                if(*(j + out_addr) > *(max_idx + out_addr)){
+                  max_idx = j;
+                }
                     printf("img[%s], class[%d], score = [%e]\n", imgs_batch[i].c_str(), j, *(j + out_addr));
                 }
-	    	std::cout << "class: " << max_idx << "\tscore:" << *(max_idx + out_addr) << std::endl;
+                std::cout << "class: " << max_idx << "\tscore:" << *(max_idx + out_addr) << std::endl;
             }
         }
 
@@ -194,14 +194,14 @@ namespace PaddleSolution {
             output_t->copy_to_cpu(out_data.data());
             for (int i = 0; i < batch_size; ++i) {
                 float* out_addr = out_data.data() + (out_num / batch_size) * i;
-	        int max_idx = 0;
+                int max_idx = 0;
                 for (int j = 0; j < (out_num / batch_size); ++j) {
                     printf("img[%s], class[%d], score = [%e]\n", imgs_batch[i].c_str(), j, *(j + out_addr));
-		    if(*(j + out_addr) > *(max_idx + out_addr)){
-			max_idx = j;
-		    }
+                    if(*(j + out_addr) > *(max_idx + out_addr)) {
+                        max_idx = j;
+                    }
                 }
-	    	std::cout << "class: " << max_idx << "\tscore:" << *(max_idx + out_addr) << std::endl;
+                std::cout << "class: " << max_idx << "\tscore:" << *(max_idx + out_addr) << std::endl;
             }
         }
         return 0;

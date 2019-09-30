@@ -148,7 +148,6 @@ namespace PaddleSolution {
                 if (u == (batch - 1) && (total_size % default_batch_size)) {
                     batch_size = total_size % default_batch_size;
                 }
-
                 int real_buffer_size = batch_size * channels * eval_width * eval_height;
                 std::vector<paddle::PaddleTensor> feeds;
                 input_buffer.resize(real_buffer_size);
