@@ -102,7 +102,7 @@ namespace PaddleSolution {
             config.SetModel(prog_file, param_file);
             config.SwitchUseFeedFetchOps(false);
             config.SwitchSpecifyInputNames(true);
-            config.EnableMemoryOptim(false, false);                        
+            config.EnableMemoryOptim();
             _main_predictor = paddle::CreatePaddlePredictor(config);
         } else {
             return -1;
